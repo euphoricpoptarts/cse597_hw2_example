@@ -1,8 +1,8 @@
 #include <vector>
 #include <cmath>
 #include "csr_graph.h"
-#include "io.cpp"
 
+// normalize columns to sum to 1
 std::vector<double> normalize_columns(const csr_graph& g){
     std::vector<int> degrees(g.t_vtx, 0);
     // since the graph is undirected, the row size is equal to the corresponding column size
@@ -32,13 +32,15 @@ std::vector<double> spmv(const csr_graph& g, const std::vector<double>& vals, co
     return output;
 }
 
+// a times x plus y
 void axpy(std::vector<double>& x, const double a, const double y){
     for(int i = 0; i < x.size(); i++){
         x[i] = a*x[i] + y;
     }
 }
 
-double norm(const std::vector<double>& a, const std::vector<double>& b){
+// calculates 2-norm of vector difference
+double norm2(const std::vector<double>& a, const std::vector<double>& b){
     double x = 0;
     for(int i = 0; i < a.size(); i++){
         double diff = std::abs(a[i] - b[i]);
@@ -52,23 +54,15 @@ std::vector<double> pagerank(const csr_graph& g, const double d, const double to
     std::vector<double> transition_probs = normalize_columns(g);
     std::vector<double> pr(g.t_vtx, 1.0 / static_cast<double>(g.t_vtx));
     double diff = 100.0;
+    int iterations = 0;
+    // convergence is measured by 2-norm of difference between successive iterations
     while(diff > tol){
         std::vector<double> pr_next = spmv(g, transition_probs, pr);
         axpy(pr_next, d, damp_add);
-        diff = norm(pr_next, pr);
-        std::cout << "Normalized diff: " << diff << std::endl;
+        diff = norm2(pr_next, pr);
         pr = pr_next;
+        iterations++;
     }
+    std::cout << "Iterations to converge: " << iterations << std::endl;
     return pr;
-}
-
-int main(int argc, char** argv){
-    if(argc < 2){
-        std::cerr << "Too few arguments provided" << std::endl;
-        return -1;
-    }
-    csr_graph g = load_metis_graph(argv[1]);
-    if(g.error) return -1;
-    std::vector<double> rank = pagerank(g, 0.85, 0.000000001);
-    return 0;
 }
