@@ -39,9 +39,9 @@ void spearman_correlation(std::vector<double>& a, std::vector<double>& b){
     std::vector<int> b_rank = get_rank(b);
     double accumulate = 0;
     int n = a.size();
-    for(int v = 0; v < n; v++){
+    for(int i = 0; i < n; i++){
         // cast to double to prevent overflow in diff*diff
-        double diff = std::abs(a_rank[v] - b_rank[v]);
+        double diff = std::abs(a_rank[i] - b_rank[i]);
         accumulate += diff*diff;
     }
     // cast to double to prevent overflow

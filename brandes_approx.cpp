@@ -77,12 +77,12 @@ std::vector<double> approximate_betweenness(const csr_graph& g){
     // accumulate pairwise dependences of samples on each vertex
     for(const int sample : samples){
         std::vector<double> dependence = dependency_on_start(g, sample);
-        for(int v = 0; v < g.t_vtx; v++){
-            if(sample != v) b[v] += dependence[v];
+        for(int i = 0; i < g.t_vtx; i++){
+            if(sample != i) b[i] += dependence[i];
         }
     }
-    for(int v = 0; v < g.t_vtx; v++){
-        b[v] *= normalize;
+    for(int i = 0; i < g.t_vtx; i++){
+        b[i] *= normalize;
     }
     return b;
 }
