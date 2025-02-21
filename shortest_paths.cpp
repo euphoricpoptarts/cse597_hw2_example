@@ -4,6 +4,7 @@
 #include "csr_graph.h"
 #include "io.cpp"
 
+// configures priority-queue as a min-heap based on degree
 class degree_compare {
     std::vector<int>& degrees;
     
@@ -23,15 +24,16 @@ std::vector<int> top_degree(const csr_graph& g){
     }
     degree_compare comparator(degrees);
     std::priority_queue<int, std::vector<int>, degree_compare> min_heap(comparator);
+    // maintain the top 1000 vertices by degree in the heap
     for(int i = 0; i < g.t_vtx; i++){
         min_heap.push(i);
+        // drop the smallest degree vertex in heap if size exceeds 1000
         if(min_heap.size() > 1000) min_heap.pop();
     }
     std::vector<int> top_vtx;
     while(!min_heap.empty()){
         int v = min_heap.top();
         min_heap.pop();
-        std::cout << v << ": " << degrees[v] << std::endl;
         top_vtx.push_back(v);
     }
     return top_vtx;
@@ -43,6 +45,7 @@ std::vector<int> shortest_distances(const csr_graph& g, int start){
     std::vector<int> q(g.t_vtx);
     int front = 0, back = 0;
     q[back++] = start;
+    // compute distances from start with BFS
     while(front < back){
         int v = q[front++];
         int d = distances[v];
