@@ -39,13 +39,13 @@ std::vector<int> top_degree(const csr_graph& g){
     return top_vtx;
 }
 
-std::vector<int> shortest_distances(const csr_graph& g, int start){
+std::vector<int> shortest_distances(const csr_graph& g, int source){
     std::vector<int> distances(g.t_vtx, -1);
-    distances[start] = 0;
+    distances[source] = 0;
     std::vector<int> q(g.t_vtx);
     int front = 0, back = 0;
-    q[back++] = start;
-    // compute distances from start with BFS
+    q[back++] = source;
+    // compute distances from source with BFS
     while(front < back){
         int v = q[front++];
         int d = distances[v];
@@ -60,6 +60,35 @@ std::vector<int> shortest_distances(const csr_graph& g, int start){
     return distances;
 }
 
+double closeness_centrality(const std::vector<int>& distances, int source){
+    int n = distances.size();
+    double t_distance = 0;
+    for(int i = 0; i < n; i++){
+        if(i == source) continue;
+        double d = distances[i];
+        // not sure how to handle this case
+        if(d == -1) continue;
+        t_distance += d;
+    }
+    double c = n - 1;
+    c /= t_distance;
+    return c;
+}
+
+double harmonic_centrality(const std::vector<int>& distances, int source){
+    int n = distances.size();
+    double h = 0;
+    for(int i = 0; i < n; i++){
+        if(i == source) continue;
+        double d = distances[i];
+        if(d == -1) continue;
+        h += 1.0 / d;
+    }
+    // normalize
+    h /= static_cast<double>(n - 1);
+    return h;
+}
+
 int main(int argc, char** argv){
     if(argc < 2){
         std::cerr << "Too few arguments provided" << std::endl;
@@ -68,10 +97,19 @@ int main(int argc, char** argv){
     csr_graph g = load_metis_graph(argv[1]);
     if(g.error) return -1;
     std::vector<int> top_vtx = top_degree(g);
+    std::vector<double> hc(top_vtx.size());
+    std::vector<double> cc(top_vtx.size());
     #pragma omp parallel for schedule(dynamic, 1)
     for(int i = 0; i < top_vtx.size(); i++){
         printf("Processing vtx %i: %i\n", i, top_vtx[i]);
         std::vector<int> distances = shortest_distances(g, top_vtx[i]);
+        hc[i] = harmonic_centrality(distances, top_vtx[i]);
+        cc[i] = closeness_centrality(distances, top_vtx[i]);
+    }
+    for(int i = 0; i < top_vtx.size(); i++){
+        int v = top_vtx[i];
+        std::cout << "Vtx " << v << " has closeness centrality " << cc[i];
+        std::cout << " and harmonic centrality " << hc[i] << std::endl;
     }
     return 0;
 }
